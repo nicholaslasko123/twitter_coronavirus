@@ -56,16 +56,17 @@ with zipfile.ZipFile(args.input_path) as archive:
                 # convert text to lower case
                 text = tweet['text'].lower()
 
-                # search hashtags
-                for hashtag in hashtags:
-                    if hashtag in text:
-                        lang = tweet['lang']
-                        counter_lang[hashtag][lang] += 1
-                        counter_lang['_all'][lang] += 1
-                        if tweet['place'] is not None:
-                            country = tweet['place']['country_code']
-                            counter_country[hashtag][country] += 1
-                            counter_country['all'][country] += 1
+    #search hashtags 
+    for tag in hashtags:
+        if tag in text:
+            language = tweet['lang']
+            counter_lang[tag][language] += 1
+            counter_lang['_all'][language] += 1
+
+            if tweet.get('place'):
+                country_code = tweet['place']['country_code']
+                counter_country[tag][country_code] += 1
+                counter_country['all'][country_code] += 1
 
 # open the outputfile
 try:

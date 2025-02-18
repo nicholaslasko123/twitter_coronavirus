@@ -3,15 +3,16 @@
 # command line args
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('--input_path', required=True)
-parser.add_argument('--output_folder', default='outputs')
+parser.add_argument('--input_path',required=True)
+parser.add_argument('--output_folder',default='outputs')
 args = parser.parse_args()
 
 # imports
 import os
 import zipfile
+import datetime 
 import json
-from collections import Counter, defaultdict
+from collections import Counter,defaultdict
 
 # load keywords
 hashtags = [
@@ -36,13 +37,13 @@ hashtags = [
 
 # initialize counters
 counter_lang = defaultdict(lambda: Counter())
-counter_country = defaultdict(lambda: Counter())
 
 # open the zipfile
 with zipfile.ZipFile(args.input_path) as archive:
 
     # loop over every file within the zip file
-    for i, filename in enumerate(archive.namelist()):
+    for i,filename in enumerate(archive.namelist()):
+        print(datetime.datetime.now(),args.input_path,filename)
 
         # open the inner file
         with archive.open(filename) as f:
@@ -56,29 +57,27 @@ with zipfile.ZipFile(args.input_path) as archive:
                 # convert text to lower case
                 text = tweet['text'].lower()
 
-                # search hashtags
-                for hashtag in hashtags:
-                    if hashtag in text:
-                        lang = tweet['lang']
-                        counter_lang[hashtag][lang] += 1
-                        counter_lang['_all'][lang] += 1
-                        if tweet['place'] is not None:
-                            country = tweet['place']['country_code']
-                            counter_country[hashtag][country] += 1
-                            counter_country['all'][country] += 1
+    #search hashtags 
+    for tag in hashtags:
+        if tag in text:
+            language = tweet['lang']
+            counter_lang[tag][language] += 1
+            counter_lang['_all'][language] += 1
+
+            if tweet.get('place'):
+                country_code = tweet['place']['country_code']
+                counter_country[tag][country_code] += 1
+                counter_country['all'][country_code] += 1
 
 # open the outputfile
 try:
     os.makedirs(args.output_folder)
 except FileExistsError:
     pass
-output_path_base = os.path.join(args.output_folder,
-                                os.path.basename(args.input_path))
-output_path_lang = output_path_base + '.lang'
-output_path_country = output_path_base + '.country'
-print('saving', output_path_lang)
-print('saving', output_path_country)
-with open(output_path_lang, 'w') as f:
+output_path_base = os.path.join(args.output_folder,os.path.basename(args.input_path))
+
+output_path_lang = output_path_base+'.lang'
+print('saving',output_path_lang)
+with open(output_path_lang,'w') as f:
     f.write(json.dumps(counter_lang))
-with open(output_path_country, 'w') as f:
-    f.write(json.dumps(counter_country))
+
